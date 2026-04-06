@@ -1,7 +1,7 @@
 import yaml
 
 def load_config():
-    path="config.yaml" # for now like that later change to /etc/webmyapp/
+    path="/etc/mywebapp/config.yaml"
     with open(path) as f:
         return yaml.safe_load(f)
     
