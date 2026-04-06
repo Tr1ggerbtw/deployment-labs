@@ -8,9 +8,9 @@ def create_app():
     
     db.init_app(app)
     
-    # from app.routes.items import items
-    # from app.routes.health import health
-    # app.register_blueprint(items)
-    # app.register_blueprint(health)
+    from app.routes.items import items
+    from app.routes.health import health
+    app.register_blueprint(items)
+    app.register_blueprint(health)
     
     return app
