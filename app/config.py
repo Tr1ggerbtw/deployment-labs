@@ -1,9 +1,16 @@
 import yaml
+import os
 
 def load_config():
-    path="/etc/mywebapp/config.yaml"
-    with open(path) as f:
-        return yaml.safe_load(f)
+    paths = [
+        "/etc/mywebapp/config.yaml",
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.yaml")
+    ]
+    for path in paths:
+        if os.path.exists(path):
+            with open(path) as f:
+                return yaml.safe_load(f)
+    raise FileNotFoundError("config.yaml not found")
     
 config = load_config()
 db_cfg = config['database']
