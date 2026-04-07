@@ -10,7 +10,7 @@ V<sub>2</sub> = (N % 2) + 1 = 2 \
 V<sub>3</sub> = (N % 3) + 1 = 3 \
 V<sub>5</sub> = (N % 5) + 1 = 2 
 
-## Тематика веб-застосунка
+## Документацію по розробленому веб-застосунку
 
 Simple Inventory — сервіс обліку обладнання
 
@@ -33,7 +33,7 @@ name, quantity, created_at)
 
 ## Порт застосунку та конфігурація
 
-Конфігураційний файл за шляхом /etc/mywebapp/config.yml
+Конфігураційний файл за шляхом /etc/mywebapp/config.yaml
 
 **Порт застосунку: 5200** \
 **База даних: PostgreSQL**
@@ -43,7 +43,35 @@ name, quantity, created_at)
 * **Мова програмування:** Python 3
 * **Фреймворк:** Flask
 
-# Розгортання
+# Налаштування середовища
+
++ Клонування репозиторію
+```bash
+git clone https://github.com/Tr1ggerbtw/deployment-labs.git
+```
+
++ Перехід у директорію проєкту
+```bash
+cd deployment-labs
+```
+
+### Запуск PostgreSQL
+```bash
+docker run -d --name postgres -e POSTGRES_PASSWORD=password123 -e POSTGRES_DB=inventory -p 5432:5432 postgres
+```
+### Створення та активація віртуального середовища
+```bash
+python3 -m venv venv # або просто python
+source venv/bin/activate
+pip install -r requirements.txt
+```
+### Запуск міграції і застосунку
+```bash
+python migrate.py
+python run.py
+```
+
+# Документація по розгортанню
 
 + Образ для віртуальної машини: [image](https://ubuntu.com/download/server)
 
