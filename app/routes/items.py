@@ -63,3 +63,15 @@ def get_item(id):
         "quantity": item.quantity,
         "created_at": str(item.created_at)
     }, 200
+
+items.route("/", methods=['GET'])
+def root():
+    body = """
+        <h2>Available endpoints</h2>
+        <ul>
+            <li>GET /items — list all items</li>
+            <li>POST /items — create new item</li>
+            <li>GET /items/&lt;id&gt; — get item by id</li>
+        </ul>
+    """
+    return html_page("Inventory API", body), 200
