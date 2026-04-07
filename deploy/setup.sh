@@ -19,7 +19,7 @@ echo "operator:12345678" | chpasswd
 passwd -e operator
 
 cat > /etc/sudoers.d/operator << EOF
-operator ALL=(ALL) NOPASSWD: /bin/systemctl start mywebapp, /bin/systemctl stop mywebapp, /bin/systemctl restart mywebapp, /bin/systemctl status mywebapp, /bin/systemctl reload nginx
+operator ALL=(ALL) NOPASSWD: /bin/systemctl start mywebapp.service, /bin/systemctl stop mywebapp.service, /bin/systemctl restart mywebapp.service, /bin/systemctl status mywebapp.service, /bin/systemctl start mywebapp.socket, /bin/systemctl stop mywebapp.socket, /bin/systemctl restart mywebapp.socket, /bin/systemctl status mywebapp.socket, /bin/systemctl reload nginx
 EOF
 chmod 440 /etc/sudoers.d/operator
 
@@ -51,10 +51,10 @@ python3 -m venv /opt/mywebapp/venv
 /opt/mywebapp/venv/bin/pip install gunicorn
 
 cp /opt/mywebapp/deploy/mywebapp.service /etc/systemd/system/mywebapp.service
+cp /opt/mywebapp/deploy/mywebapp.socket /etc/systemd/system/mywebapp.socket
 systemctl daemon-reload
-
-systemctl enable mywebapp
-systemctl start mywebapp
+systemctl enable mywebapp.socket
+systemctl start mywebapp.socket
 
 cp /opt/mywebapp/deploy/nginx.conf /etc/nginx/sites-available/mywebapp
 ln -sf /etc/nginx/sites-available/mywebapp /etc/nginx/sites-enabled/
