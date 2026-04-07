@@ -64,7 +64,7 @@ def get_item(id):
         "created_at": str(item.created_at)
     }, 200
 
-items.route("/", methods=['GET'])
+@items.route("/", methods=['GET'])
 def root():
     body = """
         <h2>Available endpoints</h2>
