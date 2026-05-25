@@ -8,9 +8,6 @@ CONTAINER_NAME="simple-inventory"
 ENV_FILE="/etc/mywebapp/mywebapp.env"
 APP_PORT="${DEPLOY_PORT:-5200}"
 
-echo "Login to GitHub Container Registry..."
-echo "${GITHUB_TOKEN:-}" | docker login ghcr.io -u "${GITHUB_ACTOR:-github-actions}" --password-stdin
-
 echo "Pulling new image..."
 DEPLOY_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
 docker pull "$DEPLOY_IMAGE"
