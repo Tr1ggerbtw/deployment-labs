@@ -1,7 +1,6 @@
-# Лабораторна робота 1
-## Тема: Розгортання Web-сервісу з автоматизацією
+# Simple Inventory - mywebapp
 
-**Працював над лабораторной роботою:** 
+**Працював над лабораторними роботами:** 
 * **ІМ-41 Легеза Данііл Павлович**
 
 ## Варіант індивідуальних завдань
@@ -149,4 +148,29 @@ sudo systemctl status mywebapp.service
 + Перевірка того, що скрипт створив файл із номером варіанту
 ```bash
 sudo cat /home/student/gradebook
+```
+
+# Запуск через Docker Compose
+
+### Вимоги
+- Docker
+- Docker Compose
+
+### Запуск
+```bash
+git clone https://github.com/Tr1ggerbtw/deployment-labs.git
+cd deployment-labs
+docker compose up -d
+```
+
+Після запуску сервіс доступний на `http://localhost`.
+
+Зупинка (дані БД зберігаються):
+```bash
+docker compose down
+```
+
+Зупинка з видаленням даних БД:
+```bash
+docker compose down -v
 ```
