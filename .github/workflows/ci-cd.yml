@@ -110,21 +110,26 @@ jobs:
           username: ${{ secrets.TARGET_USER }}
           password: ${{ secrets.TARGET_PASSWORD }}
           script: |
-            echo "--> Оновлення коду з репозиторію..."
+            echo "Оновлення коду з репозиторію..."
+            if [ ! -d "/opt/mywebapp/.git" ]; then
+              sudo git clone https://github.com/Tr1ggerbtw/deployment-labs.git /opt/mywebapp
+            fi
             cd /opt/mywebapp || exit 1
             sudo git pull origin master
             
-            echo "--> Запуск скрипта розгортання..."
-            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
-            export IMAGE_TAG="${{ github.ref_name }}"
-            export DEPLOY_PORT="5200"
-            export DB_HOST="127.0.0.1"
-            export DB_PORT="5432"
-            export DB_NAME="inventory"
-            export DB_USER="app"
-            export DB_PASSWORD="password123"
+            echo "-Авторизація в Docker Registry..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            sudo -E bash deploy/deploy_cd.sh
+            echo "Запуск скрипта розгортання..."
+            sudo IMAGE_NAME="${{ env.IMAGE_NAME }}" \
+                 IMAGE_TAG="${{ github.ref_name }}" \
+                 DEPLOY_PORT="5200" \
+                 DB_HOST="127.0.0.1" \
+                 DB_PORT="5432" \
+                 DB_NAME="inventory" \
+                 DB_USER="app" \
+                 DB_PASSWORD="password123" \
+                 bash deploy/deploy_cd.sh
 
   verify:
     name: Verify Deployment
