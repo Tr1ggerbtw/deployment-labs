@@ -4,9 +4,11 @@ from app.db import db
 
 health = Blueprint("health", "__name__")
 
+
 @health.route("/health/alive", methods=['GET'])
 def check_alive():
     return "OK", 200
+
 
 @health.route("/health/ready", methods=['GET'])
 def check_ready():

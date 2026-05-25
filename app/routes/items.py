@@ -5,8 +5,11 @@ from datetime import datetime, timezone
 
 items = Blueprint("items", __name__)
 
+
 def html_page(title, body):
-    return "<!DOCTYPE html><html><head><title>" + title + "</title></head><body>" + body + "</body></html>"
+    return "<!DOCTYPE html><html><head><title>" + title + \
+        "</title></head><body>" + body + "</body></html>"
+
 
 @items.route("/items", methods=['GET'])
 def get_items():
@@ -16,14 +19,16 @@ def get_items():
     if 'text/html' in accept:
         rows = ""
         for i in all_items:
-            rows += "<tr><td>" + str(i.id) + "</td><td>" + i.name + "</td></tr>"
+            rows += "<tr><td>" + str(i.id) + "</td><td>" + \
+                i.name + "</td></tr>"
         body = "<table border='1'><tr><th>id</th><th>name</th></tr>" + rows + "</table>"
         return html_page("Inventory", body), 200
-    
+
     result = []
     for i in all_items:
         result.append({"id": i.id, "name": i.name})
     return {"items": result}, 200
+
 
 @items.route("/items", methods=['POST'])
 def create_item():
@@ -34,10 +39,15 @@ def create_item():
     if not name or quantity is None:
         return {"error": "name and quantity are required"}, 400
 
-    new_item = Item(name=name, quantity=quantity, created_at=datetime.now(timezone.utc))
+    new_item = Item(
+        name=name,
+        quantity=quantity,
+        created_at=datetime.now(
+            timezone.utc))
     db.session.add(new_item)
     db.session.commit()
     return {"id": new_item.id}, 201
+
 
 @items.route("/items/<int:id>", methods=['GET'])
 def get_item(id):
@@ -53,7 +63,8 @@ def get_item(id):
         body += "<tr><th>id</th><td>" + str(item.id) + "</td></tr>"
         body += "<tr><th>name</th><td>" + item.name + "</td></tr>"
         body += "<tr><th>quantity</th><td>" + str(item.quantity) + "</td></tr>"
-        body += "<tr><th>created_at</th><td>" + str(item.created_at) + "</td></tr>"
+        body += "<tr><th>created_at</th><td>" + \
+            str(item.created_at) + "</td></tr>"
         body += "</table>"
         return html_page("Item details", body), 200
 
@@ -63,6 +74,7 @@ def get_item(id):
         "quantity": item.quantity,
         "created_at": str(item.created_at)
     }, 200
+
 
 @items.route("/", methods=['GET'])
 def root():

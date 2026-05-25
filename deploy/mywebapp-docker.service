@@ -1,0 +1,14 @@
+[Unit]
+Description=Simple Inventory Docker Container
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+EnvironmentFile=/etc/mywebapp/mywebapp.env
+ExecStartPre=-/usr/bin/docker rm -f $CONTAINER_NAME
+ExecStart=/usr/bin/docker run --name $CONTAINER_NAME --network host --env-file /etc/mywebapp/mywebapp.env $DEPLOY_IMAGE
+ExecStop=/usr/bin/docker stop $CONTAINER_NAME
+
+[Install]
+WantedBy=multi-user.target
