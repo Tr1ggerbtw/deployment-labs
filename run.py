@@ -11,5 +11,5 @@ with app.app_context():
 if __name__ == '__main__':
     run_host = os.getenv('APP_HOST', config['server']['host'])
     run_port = int(os.getenv('APP_PORT', config['server']['port']))
-    
+
     app.run(host=run_host, port=run_port)
