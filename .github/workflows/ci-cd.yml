@@ -170,7 +170,7 @@ jobs:
             if [[ "$HEALTH_CODE" == "403" || "$HEALTH_CODE" == "404" ]]; then echo "  OK: nginx blocks /health/ready with ${HEALTH_CODE}"; else echo "  FAIL: got ${HEALTH_CODE}"; exit 1; fi
             
             echo "[7/7] Checking nginx access log is being written..."
-            LOG_LINES=$(sudo wc -l < /var/log/nginx/access.log 2>/dev/null || echo 0)
+            LOG_LINES=$(sudo wc -l < /var/log/nginx/mywebapp.access.log 2>/dev/null || echo 0)
             if [ "$LOG_LINES" -gt 0 ]; then echo "  OK: nginx access log has entries"; else echo "  FAIL: access log empty"; exit 1; fi
             
             echo "All checks passed! Deployment verified successfully."
