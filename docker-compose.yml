@@ -1,8 +1,12 @@
+version: '3.8'
+
 services:
 
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    env_file:
+      - /etc/mywebapp/mywebapp.env
     environment:
       POSTGRES_DB: ${DB_NAME:-inventory}
       POSTGRES_USER: ${DB_USER:-app}
@@ -12,22 +16,27 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-app} -d ${DB_NAME:-inventory}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-inventory}"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   app:
-    image: ${APP_IMAGE:-ghcr.io/tr1ggerbtw/deployment-labs:latest}
+    image: ${DEPLOY_IMAGE:-ghcr.io/tr1ggerbtw/deployment-labs:latest}
     restart: unless-stopped
+    env_file:
+      - /etc/mywebapp/mywebapp.env
     ports:
-      - "${APP_PORT:-5200}:5200"
+      - "127.0.0.1:${APP_PORT:-5200}:5200"
     environment:
+      APP_HOST: "0.0.0.0"
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-inventory}
       DB_USER: ${DB_USER:-app}
       DB_PASSWORD: ${DB_PASSWORD:-password123}
+      DATABASE_URL: postgresql://${DB_USER:-app}:${DB_PASSWORD:-password123}@postgres:5432/${DB_NAME:-inventory}
+      SQLALCHEMY_DATABASE_URI: postgresql://${DB_USER:-app}:${DB_PASSWORD:-password123}@postgres:5432/${DB_NAME:-inventory}
     networks:
       - backend
     depends_on:
