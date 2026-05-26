@@ -1,0 +1,59 @@
+---
+- name: Install PostgreSQL und dependencies
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - acl
+    state: present
+    update_cache: yes
+
+- name: Find PostgreSQL configuration file
+  ansible.builtin.find:
+    paths: /etc/postgresql
+    patterns: postgresql.conf
+    recurse: yes
+  register: pg_conf
+
+- name: Ensure PostgreSQL is listening on all addresses
+  ansible.builtin.lineinfile:
+    path: "{{ pg_conf.files[0].path }}"
+    regexp: '^#?listen_addresses\s*='
+    line: "listen_addresses = '*'"
+  notify: restart postgresql
+
+- name: Find pg_hba.conf file
+  ansible.builtin.find:
+    paths: /etc/postgresql
+    patterns: pg_hba.conf
+    recurse: yes
+  register: pg_hba_conf
+
+- name: Allow worker to connect to the database
+  ansible.builtin.lineinfile:
+    path: "{{ pg_hba_conf.files[0].path }}"
+    line: "host    inventory       app             {{ hostvars['worker']['ansible_host'] }}/32            scram-sha-256"
+    insertafter: EOF
+  notify: restart postgresql
+
+- name: Start and enable PostgreSQL service
+  ansible.builtin.systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create database user 'app'
+  community.postgresql.postgresql_user:
+    name: app
+    password: password123
+    encrypted: yes
+  become: yes
+  become_user: postgres
+
+- name: Create database 'inventory'
+  community.postgresql.postgresql_db:
+    name: inventory
+    owner: app
+  become: yes
+  become_user: postgres
