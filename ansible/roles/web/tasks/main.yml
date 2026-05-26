@@ -1,0 +1,115 @@
+---
+- name: Install Nginx, Python and venv
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - python3
+      - python3-pip
+      - python3-venv
+      - acl
+    state: present
+    update_cache: yes
+
+- name: Create app system user
+  ansible.builtin.user:
+    name: app
+    system: yes
+    shell: /bin/false
+
+- name: Create operator user
+  ansible.builtin.user:
+    name: operator
+    password: "{{ '12345678' | password_hash('sha512') }}"
+    shell: /bin/bash
+    create_home: yes
+
+- name: Configure sudo for operator
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/operator
+    content: |
+      operator ALL=(ALL) NOPASSWD: /bin/systemctl start mywebapp.service, /bin/systemctl stop mywebapp.service, /bin/systemctl restart mywebapp.service, /bin/systemctl status mywebapp.service, /bin/systemctl reload nginx
+    mode: '0440'
+
+- name: Ensure app and config directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: app
+    group: app
+    mode: '0755'
+  loop:
+    - /opt/mywebapp
+    - /etc/mywebapp
+
+- name: Copy application files from host to target
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../{{ item }}"
+    dest: /opt/mywebapp/
+    owner: app
+    group: app
+  loop:
+    - app
+    - run.py
+    - migrate.py
+    - requirements.txt
+
+- name: Generate app configuration from template
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/mywebapp/config.yaml
+    owner: app
+    group: app
+
+- name: Setup Python virtual environment and install dependencies
+  ansible.builtin.pip:
+    requirements: /opt/mywebapp/requirements.txt
+    virtualenv: /opt/mywebapp/venv
+    virtualenv_command: python3 -m venv
+
+- name: Install gunicorn
+  ansible.builtin.pip:
+    name: gunicorn
+    virtualenv: /opt/mywebapp/venv
+
+- name: Setup systemd service
+  ansible.builtin.template:
+    src: mywebapp.service.j2
+    dest: /etc/systemd/system/mywebapp.service
+  notify: restart mywebapp
+
+- name: Run database migrations
+  ansible.builtin.command: /opt/mywebapp/venv/bin/python /opt/mywebapp/migrate.py
+  become: yes
+  become_user: app
+  environment:
+    PATH: "/opt/mywebapp/venv/bin:{{ ansible_env.PATH }}"
+
+- name: Start and enable mywebapp service
+  ansible.builtin.systemd:
+    name: mywebapp
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Configure Nginx from template
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/mywebapp
+
+- name: Enable Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/mywebapp
+    dest: /etc/nginx/sites-enabled/mywebapp
+    state: link
+  notify: reload nginx
+
+- name: Remove default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Lock default ubuntu user
+  ansible.builtin.user:
+    name: ubuntu
+    password_lock: yes

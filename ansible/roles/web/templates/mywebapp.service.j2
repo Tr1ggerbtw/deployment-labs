@@ -1,0 +1,13 @@
+[Unit]
+Description=My Web App
+After=network.target
+
+[Service]
+User=app
+WorkingDirectory=/opt/mywebapp
+Environment="PATH=/opt/mywebapp/venv/bin"
+ExecStart=/opt/mywebapp/venv/bin/gunicorn --bind 127.0.0.1:5200 -w 4 run:app 
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
