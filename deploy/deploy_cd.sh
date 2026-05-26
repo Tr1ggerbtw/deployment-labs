@@ -1,49 +1,61 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="mywebapp-docker"
-UNIT_SOURCE="deploy/mywebapp-docker.service"
-UNIT_DEST="/etc/systemd/system/${SERVICE_NAME}.service"
-CONTAINER_NAME="simple-inventory"
-ENV_FILE="/etc/mywebapp/mywebapp.env"
-APP_PORT="${DEPLOY_PORT:-5200}"
+IMAGE_NAME="${IMAGE_NAME:?IMAGE_NAME is required}"
+IMAGE_TAG="${IMAGE_TAG:?IMAGE_TAG is required}"
+DEPLOY_PORT="${DEPLOY_PORT:-5200}"
+DB_NAME="${DB_NAME:-inventory}"
+DB_USER="${DB_USER:-app}"
+DB_PASSWORD="${DB_PASSWORD:-password123}"
+
+DEPLOY_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
+WORK_DIR="/opt/mywebapp"
+
+echo "Image: $DEPLOY_IMAGE"
 
 echo "Pulling new image..."
-DEPLOY_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
 docker pull "$DEPLOY_IMAGE"
 
-echo "Updating environment file..."
-sudo mkdir -p /etc/mywebapp
-sudo chmod 750 /etc/mywebapp
-
-cat > /tmp/mywebapp.env <<EOF
-DEPLOY_IMAGE=${DEPLOY_IMAGE}
-DB_HOST=${DB_HOST}
-DB_PORT=${DB_PORT}
+sudo mkdir -p "$WORK_DIR"
+sudo tee "$WORK_DIR/.env" > /dev/null <<EOF
+APP_IMAGE=${DEPLOY_IMAGE}
+APP_PORT=${DEPLOY_PORT}
 DB_NAME=${DB_NAME}
 DB_USER=${DB_USER}
 DB_PASSWORD=${DB_PASSWORD}
-APP_PORT=${APP_PORT}
-CONTAINER_NAME=${CONTAINER_NAME}
 EOF
+sudo chmod 600 "$WORK_DIR/.env"
 
-sudo mv /tmp/mywebapp.env "$ENV_FILE"
-sudo chmod 600 "$ENV_FILE"
+cd "$WORK_DIR"
+docker compose down --remove-orphans || true
+docker compose up -d
 
-echo "Updating systemd unit..."
-sudo cp "$UNIT_SOURCE" "$UNIT_DEST"
-sudo chmod 644 "$UNIT_DEST"
-sudo systemctl daemon-reload
-sudo systemctl enable "${SERVICE_NAME}.service"
+echo "==> Waiting for containers to start..."
+sleep 10
 
-echo "Restarting service..."
-sudo systemctl restart "${SERVICE_NAME}.service"
-sleep 5
+SERVICE_NAME="mywebapp-docker"
+UNIT_SOURCE="deploy/mywebapp-docker.service"
+UNIT_DEST="/etc/systemd/system/${SERVICE_NAME}.service"
 
-if sudo systemctl is-active --quiet "${SERVICE_NAME}.service"; then
-    echo "Deploy successful!"
-else
-    echo "ERROR: Service failed to start. Check logs:" >&2
-    sudo journalctl -u "${SERVICE_NAME}.service" --no-pager -n 20
+if [ -f "$UNIT_SOURCE" ]; then
+  echo "==> Updating systemd unit..."
+  sudo cp "$UNIT_SOURCE" "$UNIT_DEST"
+  sudo chmod 644 "$UNIT_DEST"
+  sudo systemctl daemon-reload
+  sudo systemctl enable "${SERVICE_NAME}.service"
+  sudo systemctl restart "${SERVICE_NAME}.service"
+  sleep 5
+
+  if sudo systemctl is-active --quiet "${SERVICE_NAME}.service"; then
+    echo "==> Deploy successful!"
+  else
+    echo "ERROR: Service failed to start. Logs:" >&2
+    sudo journalctl -u "${SERVICE_NAME}.service" --no-pager -n 30
     exit 1
+  fi
+else
+  echo "==> No systemd unit found, skipping service setup."
+  docker ps | grep -q "simple-inventory" \
+    && echo "==> Deploy successful!" \
+    || { echo "ERROR: container not running"; docker ps -a; exit 1; }
 fi
