@@ -1,0 +1,34 @@
+---
+- name: Install basic required packages
+  ansible.builtin.apt:
+    name:
+      - sudo
+      - bash
+      - acl
+    state: present
+    update_cache: yes
+
+- name: Create student user
+  ansible.builtin.user:
+    name: student
+    shell: /bin/bash
+    groups: sudo
+    append: yes
+    create_home: yes
+
+- name: Create gradebook file for student
+  ansible.builtin.copy:
+    content: "11\n"
+    dest: /home/student/gradebook
+    owner: student
+    group: student
+    mode: '0644'
+
+- name: Create teacher user with default password
+  ansible.builtin.user:
+    name: teacher
+    password: "{{ '12345678' | password_hash('sha512') }}"
+    shell: /bin/bash
+    groups: sudo
+    append: yes
+    create_home: yes
