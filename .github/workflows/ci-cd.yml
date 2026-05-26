@@ -9,7 +9,7 @@ on:
     branches: [master]
 
 env:
-  IMAGE_NAME: ghcr.io/tr1ggerbtw/simple-inventory
+  IMAGE_NAME: ghcr.io/tr1ggerbtw/deployment-labs
   PYTHON_VERSION: "3.12"
 
 jobs:
