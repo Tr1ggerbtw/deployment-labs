@@ -1,6 +1,7 @@
 import yaml
 import os
 
+
 def load_config():
     paths = [
         "/etc/mywebapp/config.yaml",
@@ -18,7 +19,6 @@ db_cfg = config.get('database', {})
 
 
 class Config:
-
     user = os.getenv('DB_USER') or db_cfg.get('user', 'app')
     password = os.getenv('DB_PASSWORD') or db_cfg.get('password', 'password123')
     host = os.getenv('DB_HOST') or db_cfg.get('host', 'localhost')
@@ -29,5 +29,6 @@ class Config:
         'SQLALCHEMY_DATABASE_URI',
         f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
     )
-    
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
