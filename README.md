@@ -174,3 +174,54 @@ docker compose down
 ```bash
 docker compose down -v
 ```
+
+# Інструкція з розгортання (4 лабораторна)
+
+### 1. Підняття інфраструктури (Terraform)
+Перейдіть у директорію terraform та застосуйте конфігурацію:
+```bash
+cd terraform
+terraform init
+terraform apply
+```
+
+Після успішного виконання Terraform виведе в консоль дві IP-адреси (наприклад):
+
+db_ip = "192.168.122.?"
+
+worker_ip = "192.168.122.?"
+
+### 2. Оновлення Inventory
+
+Відкрийте файл ansible/inventory.ini та підставте отримані IP-адреси у відповідні змінні ansible_host:
+
+```
+[workers]
+worker ansible_host=<ваш_worker_ip> ansible_user=ansible
+
+[db]
+db ansible_host=<ваш_db_ip> ansible_user=ansible
+```
+
+### 3. Налаштування конфігурації (Ansible)
+
+Перейдіть у директорію ansible та запустіть playbook:
+
+```bash
+cd ../ansible
+ansible-playbook playbook.yml
+```
+
+Playbook є ідемпотентним. Повторні запуски не призведуть до змін системи, якщо конфігурація вже актуальна.
+
+### API Ендпоінти (Health Checks)
+
+Доступні ззовні через Nginx для перевірки стану системи:
+
+- GET /health/alive - перевірка роботи веб-застосунку.
+- GET /health/ready - комплексна перевірка роботи застосунку ТА з'єднання з базою даних.
+
+### Безпека та користувачі
+- Доступ за SSH працює для користувачів ansible (через ключі), teacher та operator.
+- Користувач operator має обмежені права sudo виключно на перезапуск сервісів (systemctl restart mywebapp.service, systemctl reload nginx).
+- Прямий доступ до бази даних ззовні заблокований, db приймає з'єднання лише від worker.

@@ -77,13 +77,6 @@
     dest: /etc/systemd/system/mywebapp.service
   notify: restart mywebapp
 
-- name: Run database migrations
-  ansible.builtin.command: /opt/mywebapp/venv/bin/python /opt/mywebapp/migrate.py
-  become: yes
-  become_user: app
-  environment:
-    PATH: "/opt/mywebapp/venv/bin:{{ ansible_env.PATH }}"
-
 - name: Start and enable mywebapp service
   ansible.builtin.systemd:
     name: mywebapp

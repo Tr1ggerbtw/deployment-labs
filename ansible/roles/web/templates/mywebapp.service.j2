@@ -6,6 +6,7 @@ After=network.target
 User=app
 WorkingDirectory=/opt/mywebapp
 Environment="PATH=/opt/mywebapp/venv/bin"
+ExecStartPre=/opt/mywebapp/venv/bin/python /opt/mywebapp/migrate.py
 ExecStart=/opt/mywebapp/venv/bin/gunicorn --bind 127.0.0.1:5200 -w 4 run:app 
 Restart=on-failure
 
