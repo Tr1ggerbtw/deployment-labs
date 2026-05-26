@@ -17,18 +17,18 @@ echo "Pulling new image..."
 docker pull "$DEPLOY_IMAGE"
 
 sudo mkdir -p "$WORK_DIR"
-sudo tee "$WORK_DIR/.env" > /dev/null <<EOF
-APP_IMAGE=${DEPLOY_IMAGE}
+sudo mkdir -p /etc/mywebapp
+sudo tee /etc/mywebapp/mywebapp.env > /dev/null <<EOF
+DEPLOY_IMAGE=${DEPLOY_IMAGE}
+CONTAINER_NAME=simple-inventory
 APP_PORT=${DEPLOY_PORT}
-DB_NAME=${DB_NAME}
-DB_USER=${DB_USER}
-DB_PASSWORD=${DB_PASSWORD}
+DB_HOST=${DB_HOST:-127.0.0.1}
+DB_PORT=5432
+DB_NAME=${DB_NAME:-inventory}
+DB_USER=${DB_USER:-app}
+DB_PASSWORD=${DB_PASSWORD:-password123}
 EOF
-sudo chmod 600 "$WORK_DIR/.env"
-
-cd "$WORK_DIR"
-docker compose down --remove-orphans || true
-docker compose up -d
+sudo chmod 600 /etc/mywebapp/mywebapp.env
 
 echo "==> Waiting for containers to start..."
 sleep 10
@@ -38,7 +38,7 @@ UNIT_SOURCE="deploy/mywebapp-docker.service"
 UNIT_DEST="/etc/systemd/system/${SERVICE_NAME}.service"
 
 if [ -f "$UNIT_SOURCE" ]; then
-  echo "==> Updating systemd unit..."
+  echo "Updating systemd unit..."
   sudo cp "$UNIT_SOURCE" "$UNIT_DEST"
   sudo chmod 644 "$UNIT_DEST"
   sudo systemctl daemon-reload
@@ -47,15 +47,15 @@ if [ -f "$UNIT_SOURCE" ]; then
   sleep 5
 
   if sudo systemctl is-active --quiet "${SERVICE_NAME}.service"; then
-    echo "==> Deploy successful!"
+    echo "Deploy successful!"
   else
     echo "ERROR: Service failed to start. Logs:" >&2
     sudo journalctl -u "${SERVICE_NAME}.service" --no-pager -n 30
     exit 1
   fi
 else
-  echo "==> No systemd unit found, skipping service setup."
+  echo "No systemd unit found, skipping service setup."
   docker ps | grep -q "simple-inventory" \
-    && echo "==> Deploy successful!" \
+    && echo "Deploy successful!" \
     || { echo "ERROR: container not running"; docker ps -a; exit 1; }
 fi

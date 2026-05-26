@@ -6,5 +6,5 @@ database:
   host: 127.0.0.1
   port: 5432
   name: inventory
-  user: postgres
+  user: app
   password: password123
