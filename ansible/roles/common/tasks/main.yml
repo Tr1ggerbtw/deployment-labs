@@ -27,8 +27,18 @@
 - name: Create teacher user with default password
   ansible.builtin.user:
     name: teacher
-    password: "{{ '12345678' | password_hash('sha512') }}"
+    password: "{{ '12345678' | password_hash('sha512', 'staticsal') }}"
     shell: /bin/bash
     groups: sudo
     append: yes
     create_home: yes
+
+- name: Enable SSH Password Authentication
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/01-allow-passwords.conf
+    content: |
+      PasswordAuthentication yes
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart ssh

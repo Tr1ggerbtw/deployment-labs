@@ -19,7 +19,7 @@
 - name: Create operator user
   ansible.builtin.user:
     name: operator
-    password: "{{ '12345678' | password_hash('sha512') }}"
+    password: "{{ '12345678' | password_hash('sha512', 'staticsal') }}"
     shell: /bin/bash
     create_home: yes
 
